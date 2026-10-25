@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>덜 붐비는 오름 찾기</title>
+<style>
+body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;margin:0;background:#f7f7f5;color:#222}
+header{background:#2f4f3a;color:#fff;padding:18px 20px}h1{margin:0;font-size:20px}header p{margin:6px 0 0;font-size:13px;opacity:.85}
+main{max-width:760px;margin:0 auto;padding:16px}select{font-size:16px;padding:8px;width:100%}
+.card{background:#fff;border-radius:10px;padding:14px 16px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.alt{border-left:4px solid #2f855a;padding-left:10px;margin:10px 0}.muted{color:#666;font-size:13px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:8px}.bar{flex:1;background:#90cdf4;position:relative}
+.bar.q{background:#2f855a}.bar span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:11px;color:#555}
+footer{font-size:12px;color:#666;padding:20px}
+</style></head><body>
+<header><h1>덜 붐비는 오름 찾기</h1><p>가려던 오름을 고르면 가까운 읍면에서 관광객 비중이 낮은 오름과 한산한 달을 알려 줍니다.</p></header>
+<main>
+<label for="sel" class="muted">가려던 오름 (2025년 관광객 도착 상위 15곳)</label>
+<select id="sel"></select>
+<div id="out"></div>
+</main>
+<footer>데이터: 제주관광공사 제주관광빅데이터플랫폼 「오름별 차량 도착 수」(티맵 내비게이션, 공공누리 제1유형), 2023~2025년.
+도착 수는 내비게이션 도착 기록이라 실제 방문객 수와 다르며, 2026년 1월부터 집계 방식이 바뀌어 2025년까지만 썼습니다.
+추천 기준: 같은 읍면(없으면 맞닿은 읍면)에서 2025년 전체 도착 1,000건 이상이고 관광객 비중과 관광객 도착 수가 고른 오름보다 낮은 곳을 관광객 비중 낮은 순으로 3곳.</footer>
+<script>
+const DATA=/*DATA*/;
+const sel=document.getElementById('sel'), out=document.getElementById('out');
+DATA.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${d.name} (${d.emd})`;sel.appendChild(o);});
+function render(){
+  const d=DATA[sel.value]; const mx=Math.max(...Object.values(d.monthly_tour_2023_2025));
+  let h=`<div class="card"><b>${d.name}</b> <span class="muted">${d.emd}</span><br>
+  2025년 내비 도착 ${(d.tour_2025+d.res_2025).toLocaleString()}건 중 관광객 ${Math.round(d.tour_share*100)}%
+  <div class="muted" style="margin-top:8px">월별 관광객 도착(2023~2025 합계). 초록 막대가 가장 한산한 3개 달입니다.</div>
+  <div class="bars">${[...Array(12)].map((_,k)=>{const m=k+1,v=d.monthly_tour_2023_2025[m]||0;return `<div class="bar ${d.quiet_months.includes(m)?'q':''}" style="height:${mx?v/mx*100:0}%" title="${m}월 ${v}건"><span>${m}</span></div>`}).join('')}</div><br></div>`;
+  if(d.alternatives.length){
+    h+=`<div class="card"><b>${d.alt_scope}의 대안</b>`+d.alternatives.map(a=>`<div class="alt"><b>${a.name}</b><br><span class="muted">2025년 도착 ${a.total_2025.toLocaleString()}건, 관광객 비중 ${Math.round(a.tour_share*100)}% (도민 ${a.res_2025.toLocaleString()}건)</span></div>`).join('')+`</div>`;
+  } else {
+    h+=`<div class="card muted">같은 읍면과 맞닿은 읍면에 기준을 넘는 오름이 없습니다. 한산한 달을 참고해 주세요.</div>`;
+  }
+  out.innerHTML=h;
+}
+sel.onchange=render; render();
+</script></body></html>
